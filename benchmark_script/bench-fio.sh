@@ -48,7 +48,7 @@ do
 		for NUMJOBS in 1 2 4 8 16
 		do
 			sync
-			[[ -f /proc/sys/vm/drop_caches ]] && echo 3 > /proc/sys/vm/drop_caches
+			[[ -f /proc/sys/vm/drop_caches ]] && (echo 3 > /proc/sys/vm/drop_caches || true)
 			echo "=== $FILE ============================================"
 			echo "Running benchmark $RW with I/O depth of $IODEPTH and numjobs $NUMJOBS"
 			export RW
