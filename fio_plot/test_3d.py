@@ -3,7 +3,7 @@ import unittest
 from fiolib.bar3d import plot_3d
 
 
-class MyTestCase(unittest.TestCase):
+class Test3D(unittest.TestCase):
     def test_correct_bars_drawn(self):
         settings = {
             'type': ['iops'],
@@ -12,10 +12,10 @@ class MyTestCase(unittest.TestCase):
             'title': 'test',
             'subtitle': '',
             'filter': ['read', 'write'],
+            # intentionally using prime numbers
             'iodepth': [2, 3],
-            'numjobs': [5,  11],
+            'numjobs': [5, 11],
         }
-        # intentionally using prime numbers
         dataset = []
         for iodepth in settings['iodepth']:
             for numjobs in settings['numjobs']:
