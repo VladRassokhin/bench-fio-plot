@@ -3,3 +3,6 @@
 *.pyo
 .DS_Store
 __pycache__/
+out/
+reports/
+.idea/
