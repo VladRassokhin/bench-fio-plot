@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
-import pprint
+import numpy as np
+
 import fiolib.shared_chart as shared
 import fiolib.supporting as supporting
-from datetime import datetime
 
 
 def sort_latency_keys(latency):
@@ -119,8 +120,12 @@ def chart_latency_histogram(settings, dataset):
 
     fig.text(0.75, 0.03, settings['source'])
 
-    now = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-    title = settings['title'].replace(" ", '_')
-    title = title.replace("/", '-')
     plt.tight_layout(rect=[0, 0.00, 0.95, 0.95])
-    fig.savefig(f"{title}_{now}.png", dpi=settings['dpi'])
+    title = settings['title'].replace(" ", '-').replace("/", '-')
+    name = title + '-hist-lat-' + str(settings['rw']) + '-' + '-'.join(
+        map(str, settings['numjobs'])) + '.png'
+    if os.path.isfile(name):
+        print(f"File '{name}' already exists")
+        exit(1)
+    fig.savefig(name, dpi=settings['dpi'])
+

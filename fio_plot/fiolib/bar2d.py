@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
-import pprint
-import fiolib.supporting as supporting
-from datetime import datetime
+import numpy as np
+
 import fiolib.shared_chart as shared
+import fiolib.supporting as supporting
 
 
 def chart_2dbarchart_jsonlogdata(settings, dataset):
     """This function is responsible for drawing iops/latency bars for a
     particular iodepth."""
+    rw = settings['rw']
+    numjobs = settings['numjobs']
+    if not numjobs or len(numjobs) != 1:
+        print("Expected only single numjob, got: " + str(numjobs))
+        exit(1)
+
     dataset_types = shared.get_dataset_types(dataset)
     data = shared.get_record_set(settings, dataset, dataset_types,
-                                 settings['rw'], settings['numjobs'])
+                                 rw, numjobs)
 
     fig, (ax1, ax2) = plt.subplots(
         nrows=2, gridspec_kw={'height_ratios': [7, 1]})
@@ -68,8 +75,10 @@ def chart_2dbarchart_jsonlogdata(settings, dataset):
     #
     # Save graph to file
     #
-    now = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-    title = settings['title'].replace(" ", '-')
-    title = title.replace("/", '-')
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    fig.savefig(f"{title}_{now}.png", dpi=settings['dpi'])
+    title = settings['title'].replace(" ", '-').replace("/", '-')
+    name = title + '-graph-lat-iops-' + str(rw) + '-j' + str(numjobs[0]) + '.png'
+    if os.path.isfile(name):
+        print(f"File '{name}' already exists")
+        exit(1)
+    fig.savefig(name, dpi=settings['dpi'])

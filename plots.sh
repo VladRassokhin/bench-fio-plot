@@ -15,19 +15,19 @@ popd
 
 plot() {
 	echo "Plotting $*"
-	metric="$1"
+	run="$1"
 	shift
-	./fio_plot/fio_plot -i "out/$name" -T "$name-$metric" -r "$metric" "$@"
+	./fio_plot/fio_plot -i "out/$name" -T "$name" -r "$run" "$@"
 }
 
-for metric in randread randwrite read write; do
+for run in randread randwrite read write; do
   # 3d plots looks a bit off
-	plot $metric -L -t iops
-	plot $metric -L -t lat
-	plot $metric -L -t bw
+	plot $run -L -t iops
+	plot $run -L -t lat
+	plot $run -L -t bw
 	for numjobs in 1 2 4 8 16; do
-		plot $metric -l -t bw -d 1 2 4 8 16 32 -n $numjobs
-		plot $metric -g -t bw -d 1 2 4 8 16 32 -n $numjobs
+		plot $run -l -t bw -d 1 2 4 8 16 32 -n $numjobs
+		plot $run -g -t bw -d 1 2 4 8 16 32 -n $numjobs
 	done
 sleep 1
 done

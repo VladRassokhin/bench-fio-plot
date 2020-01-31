@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-import matplotlib.pyplot as plt
+import os
+
 import matplotlib.markers as markers
+import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+
 import fiolib.supporting as supporting
-from datetime import datetime
 
 
 def make_patch_spines_invisible(ax):
@@ -14,6 +16,7 @@ def make_patch_spines_invisible(ax):
 
 
 def chart_2d_log_data(settings, dataset):
+    metric = '-'.join(settings['type'])
     #
     # Raw data must be processed into series data + enriched
     #
@@ -42,7 +45,7 @@ def chart_2d_log_data(settings, dataset):
     extra_offset = len(datatypes) * len(settings['iodepth']) * len(
         settings['numjobs']) * len(settings['filter'])
 
-    bottom_offset = 0.18 + (extra_offset/120)
+    bottom_offset = 0.18 + (extra_offset / 120)
     if 'bw' in datatypes and (len(datatypes) > 2):
         #
         # If the third y-axis is enabled, the graph is ajusted to make room for
@@ -130,8 +133,12 @@ def chart_2d_log_data(settings, dataset):
         plt.text(1, -0.10, str(settings['source']), ha='right', va='top',
                  transform=ax.transAxes, fontsize=8, fontfamily='monospace')
 
-    now = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-    title = settings['title'].replace(" ", '-')
-    title = title.replace("/", '-')
     plt.tight_layout(rect=[0, 0.00, 0.95, 0.95])
-    fig.savefig(f"{title}-{now}.png", dpi=settings['dpi'])
+    title = settings['title'].replace(" ", '-').replace("/", '-')
+    name = title + '-graph-' + metric + '-' + str(settings['rw']) + '-j' + '-'.join(map(str, settings['numjobs'])) + '.png'
+    if os.path.isfile(name):
+        print(f"File '{name}' already exists")
+        exit(1)
+    fig.savefig(name, dpi=settings['dpi'])
+
+

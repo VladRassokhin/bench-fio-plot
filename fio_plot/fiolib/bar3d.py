@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -143,5 +145,11 @@ def plot_3d(settings, dataset):
     fig.text(0.75, 0.03, settings['source'])
 
     plt.tight_layout()
-    plt.savefig(settings['title'] + '-3d-' + metric + '-' + str(rw) + '.png')
+    title = settings['title'].replace(" ", '-').replace("/", '-')
+    metric = settings['type'][0]
+    name = title + '-3d-' + metric + '-' + str(rw) + '.png'
+    if os.path.isfile(name):
+        print(f"File '{name}' already exists")
+        exit(1)
+    fig.savefig(name, dpi=settings['dpi'])
     plt.close('all')
