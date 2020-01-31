@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import functools
+import operator
 import os
 
 import matplotlib.pyplot as plt
@@ -49,7 +51,7 @@ def autolabel(rects, axis):
             axis.text(rect.get_x() + rect.get_width() / 2., 1 +
                       height, '{}%'.format(int(height)),
                       ha='center', fontsize=fontsize)
-        elif height > 0.4:
+        elif height > 0.1:
             axis.text(rect.get_x() + rect.get_width() /
                       2., 1 + height, "{:3.2f}%".format(height), ha='center', fontsize=fontsize)
 
@@ -75,59 +77,53 @@ def chart_latency_histogram(settings, dataset):
     sorted_result_us = sort_latency_data(record_set['data']['latency_us'])
     sorted_result_ns = sort_latency_data(record_set['data']['latency_ns'])
 
-    # This is just to use easier to understand variable names
-    x_series = sorted_result_ms['keys']
-    y_series1 = sorted_result_ms['values']
-    y_series2 = sorted_result_us['values']
-    y_series3 = sorted_result_ns['values']
+    all_keys = functools.reduce(operator.iconcat, [
+        (round(float('0.' + k), 3) for k in sorted_result_us['keys']),
+        sorted_result_us['keys'],
+        (k + 'k' for k in sorted_result_ms['keys'])
+    ], [])
 
-    # us/ns histogram data is missing 2000/>=2000 fields that ms data has
-    # so we have to add dummy data to match x-axis size
-    y_series2.extend([0, 0])
-    y_series3.extend([0, 0])
+    all_values = functools.reduce(operator.iconcat, [
+        sorted_result_ns['values'],
+        sorted_result_us['values'],
+        sorted_result_ms['values']
+    ], [])
+
+    # This is just to use easier to understand variable names
+    x_series = all_keys
 
     # Create the plot
     fig, ax1 = plt.subplots()
     fig.set_size_inches(10, 6)
 
     # Make the positioning of the bars for ns/us/ms
-    x_pos = np.arange(0, len(x_series) * 3, 3)
+    x_pos = np.arange(0, len(x_series), 1)
     width = 1
 
-    # how much of the IO falls in a particular latency class ns/us/ms
-    coverage_ms = round(sum(y_series1), 2)
-    coverage_us = round(sum(y_series2), 2)
-    coverage_ns = round(sum(y_series3), 2)
-
     # Draw the bars
-    rects1 = ax1.bar(x_pos, y_series1, width, color='r')
-    rects2 = ax1.bar(x_pos + width, y_series2, width, color='b')
-    rects3 = ax1.bar(x_pos + width + width, y_series3, width, color='g')
+    colors = functools.reduce(operator.iconcat, [
+        'r' * len(sorted_result_ns['values']),
+        'b' * len(sorted_result_us['values']),
+        'g' * len(sorted_result_ms['values']),
+    ], [])
+    rects = ax1.bar(x_pos, all_values, width, color=colors)
 
     # Configure the axis and labels
     ax1.set_ylabel('Percentage of I/O')
-    ax1.set_xlabel("Latency")
-    ax1.set_xticks(x_pos + width / 2)
+    ax1.set_xlabel("Latency (µs)")
+    ax1.set_xticks(x_pos)
     ax1.set_xticklabels(x_series)
+    ax1.xaxis.set_tick_params(rotation=45)
 
     # Make room for labels by scaling y-axis up (max is 100%)
     ax1.set_ylim(0, 100 * 1.1)
 
-    label_ms = "Latency in ms ({0:05.2f}%)".format(coverage_ms)
-    label_us = "Latency in us  ({0:05.2f}%)".format(coverage_us)
-    label_ns = "Latency in ns  ({0:05.2f}%)".format(coverage_ns)
-
     # Configure the title
     settings['type'] = ""
     supporting.create_title_and_sub(settings, plt, ['type', 'filter'])
-    # Configure legend
-    ax1.legend((rects1[0], rects2[0], rects3[0]), (label_ms, label_us, label_ns), frameon=False,
-               loc='best')
 
     # puts a percentage above each bar (ns/us/ms)
-    autolabel(rects1, ax1)
-    autolabel(rects2, ax1)
-    autolabel(rects3, ax1)
+    autolabel(rects, ax1)
 
     fig.text(0.75, 0.03, settings['source'])
 
