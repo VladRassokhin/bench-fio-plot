@@ -1,6 +1,6 @@
 #!/usr/local/bin env
-import pprint as pprint
 import statistics
+
 import numpy as np
 
 
@@ -13,10 +13,10 @@ def running_mean(l, N):
 
     for i in range(0, N):
         sum = sum + l[i]
-        result[i] = sum / (i+1)
+        result[i] = sum / (i + 1)
 
     for i in range(N, len(l)):
-        sum = sum - l[i-N] + l[i]
+        sum = sum - l[i - N] + l[i]
         result[i] = sum / N
 
     return result
@@ -53,7 +53,7 @@ def get_scale_factor(dataset):
     for item in scale_factors:
         """ Notice the factor, prevents scaling the graph up too soon if values
             are small, thus becomming almost unreadable """
-        if mean > item['scale']*5:
+        if mean > item['scale'] * 5:
             return item
 
 
@@ -156,7 +156,6 @@ def get_colors():
 
 
 def lookupTable(metric):
-
     lookup = {'iops': {'ylabel': 'IOPS',
                        'label_pos': 0, 'label_rot': 'vertical'},
               'bw': {'ylabel': 'Througput (KB/s)',
@@ -172,7 +171,6 @@ def lookupTable(metric):
 
 
 def generate_axes(ax, datatypes):
-
     axes = {}
     metrics = ['iops', 'lat', 'bw', 'clat', 'slat']
     tkw = dict(size=4, width=1.5)
@@ -200,7 +198,6 @@ def generate_axes(ax, datatypes):
 
 
 def round_metric(value):
-
     if value > 1:
         value = round(value, 2)
     if value <= 1:
@@ -226,7 +223,6 @@ def raw_stddev_to_percent(values, stddev_series):
 
 
 def process_dataset(settings, dataset):
-
     datatypes = []
     new_list = []
     new_structure = {'datatypes': None, 'dataset': None}
@@ -325,12 +321,13 @@ def create_title_and_sub(settings, plt, skip_keys=[], sub_x_offset=0, sub_y_offs
     # plt.subtitle sets title and plt.title sets subtitle ....
     #
     plt.suptitle(settings['title'])
-    subtitle = None
-    sub_title_items = {'rw': settings['rw'],
-                       'iodepth': str(settings['iodepth']).strip('[]'),
-                       'numjobs': str(settings['numjobs']).strip('[]'),
-                       'type': str(settings['type']).strip('[]').replace('\'', ''),
-                       'filter': str(settings['filter']).strip('[]').replace('\'', '')}
+    sub_title_items = {
+        'rw': settings['rw'],
+        'iodepth': str(', '.join(map(str, settings['iodepth']))),
+        'numjobs': str(', '.join(map(str, settings['numjobs']))),
+        'type': str(', '.join(settings['type'])),
+        'filter': str(', '.join(settings['filter'])),
+    }
     if settings['subtitle']:
         subtitle = settings['subtitle']
     else:
@@ -338,7 +335,7 @@ def create_title_and_sub(settings, plt, skip_keys=[], sub_x_offset=0, sub_y_offs
         for key in sub_title_items.keys():
             if key not in skip_keys:
                 if len(settings[key]) > 0:
-                    temporary_string += f" {key} {sub_title_items[key]} |"
+                    temporary_string += f" {key}: {sub_title_items[key]} |"
         subtitle = temporary_string
 
     plt.title(subtitle, fontsize=8,

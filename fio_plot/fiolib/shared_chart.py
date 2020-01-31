@@ -31,8 +31,9 @@ def get_record_set_3d(settings, dataset, dataset_types, rw, metric):
     record_set = {'iodepth': dataset_types['iodepth'],
                   'numjobs': dataset_types['numjobs'], 'values': []}
     # pprint.pprint(dataset)
-    if settings['rw'] == 'randrw':
-        if len(settings['filter']) > 1 or not settings['filter']:
+    filter = settings['filter']
+    if rw == 'randrw':
+        if len(filter) > 1 or not filter:
             print(
                 "Since we are processing randrw data, you must specify a filter for either read or write data, not both.")
             exit(1)
@@ -41,7 +42,7 @@ def get_record_set_3d(settings, dataset, dataset_types, rw, metric):
         row = []
         for jobs in dataset_types['numjobs']:
             for record in dataset:
-                if (int(record['iodepth']) == int(depth)) and int(record['numjobs']) == jobs and record['rw'] == rw and record['type'] in settings['filter']:
+                if (int(record['iodepth']) == int(depth)) and int(record['numjobs']) == jobs and record['rw'] == rw and record['type'] in filter:
                     row.append(record[metric])
         record_set['values'].append(supporting.round_metric_series(row))
     return record_set

@@ -1,14 +1,28 @@
 #!/usr/bin/env python3
-import numpy as np
-import matplotlib.pyplot as plt
-import pprint
-import fiolib.shared_chart as shared
-from matplotlib import cm
-# The module required for the 3D graph.
-from mpl_toolkits.mplot3d import axes3d
-from datetime import datetime
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.axis3d import Axis
+
+import fiolib.shared_chart as shared
 import fiolib.supporting as supporting
+
+
+# Removing axes margin on 3D graphs
+# From https://stackoverflow.com/a/52404426/1039742
+def _get_coord_info_new(self, renderer):
+    mins, maxs, cs, deltas, tc, highs = self._get_coord_info_old(renderer)
+    correction = deltas * [0, 0, 1.0 / 4]
+    mins += correction
+    maxs -= correction
+    return mins, maxs, cs, deltas, tc, highs
+
+
+if not hasattr(Axis, "_get_coord_info_old"):
+    Axis._get_coord_info_old = Axis._get_coord_info
+Axis._get_coord_info = _get_coord_info_new
 
 
 def plot_3d(settings, dataset):
@@ -17,6 +31,9 @@ def plot_3d(settings, dataset):
 
     if not settings['type']:
         print("The type of data must be specified with -t (iops/lat).")
+        exit(1)
+    if len(settings['type']) != 1:
+        print("Expected single type of data to be specified with -t (iops/lat).")
         exit(1)
 
     dataset_types = shared.get_dataset_types(dataset)
@@ -29,11 +46,11 @@ def plot_3d(settings, dataset):
     # pprint.pprint(data)
 
     fig = plt.figure()
-    ax1 = fig.add_subplot(111, projection='3d')
+    ax1 = fig.add_subplot(111, projection=Axes3D.name)
     fig.set_size_inches(15, 10)
 
-    lx = len(dataset_types['iodepth'])
-    ly = len(dataset_types['numjobs'])
+    lx = len(iodepth)
+    ly = len(numjobs)
 
     # Ton of code to scale latency
     if metric == 'lat':
@@ -63,20 +80,21 @@ def plot_3d(settings, dataset):
 
     xpos = np.arange(0, lx, 1)
     ypos = np.arange(0, ly, 1)
-    xpos, ypos = np.meshgrid(xpos-(size/lx), ypos-(size))
+    xpos, ypos = np.meshgrid(xpos - size / 2, ypos - size / 2)
 
-    xpos_f = xpos.flatten()   # Convert positions to 1D array
-    ypos_f = ypos.flatten()
-    zpos = np.zeros(lx*ly)
+    # Convert positions to 1D array
+    xpos_f = xpos.flatten(order='C')
+    ypos_f = ypos.flatten(order='C')
+    zpos = np.zeros(lx * ly)
 
     # Positioning and sizing of the bars
-    dx = size * np.ones_like(zpos)
+    dx = np.full(lx * ly, size)
     dy = dx.copy()
     dz = n.flatten(order='F')
-    values = dz / (dz.max()/1)
+    values = dz / (dz.max())
 
     # Create the 3D chart with positioning and colors
-    cmap = plt.get_cmap('rainbow', xpos.ravel().shape[0])
+    cmap = plt.get_cmap('rainbow', len(values))
     colors = cm.rainbow(values)
     ax1.bar3d(xpos_f, ypos_f, zpos, dx, dy, dz, color=colors)
 
@@ -90,16 +108,17 @@ def plot_3d(settings, dataset):
     # Set tics for x/y axis
     float_x = [float(x) for x in (xpos_orig)]
 
-    ax1.w_xaxis.set_ticks(float_x)
-    ax1.w_yaxis.set_ticks(ypos_orig)
-    ax1.w_xaxis.set_ticklabels(iodepth)
-    ax1.w_yaxis.set_ticklabels(numjobs)
+    ax1.xaxis.set_ticks(float_x)
+    ax1.yaxis.set_ticks(ypos_orig)
+    ax1.xaxis.set_ticklabels(iodepth)
+    ax1.yaxis.set_ticklabels(numjobs)
+    ax1.set_zlim(bottom=0)
 
     # axis labels
     fontsize = 16
     ax1.set_xlabel('iodepth', fontsize=fontsize)
     ax1.set_ylabel('numjobs', fontsize=fontsize)
-    ax1.set_zlabel(z_axis_label,  fontsize=fontsize)
+    ax1.set_zlabel(z_axis_label, fontsize=fontsize)
 
     [t.set_verticalalignment('center_baseline') for t in ax1.get_yticklabels()]
     [t.set_verticalalignment('center_baseline') for t in ax1.get_xticklabels()]
@@ -119,12 +138,10 @@ def plot_3d(settings, dataset):
 
     # title
     supporting.create_title_and_sub(
-        settings, plt, skip_keys=['iodepth', 'numjobs'],  sub_x_offset=0.57, sub_y_offset=1.05)
+        settings, plt, skip_keys=['iodepth', 'numjobs'], sub_x_offset=0.57, sub_y_offset=1.05)
 
     fig.text(0.75, 0.03, settings['source'])
 
     plt.tight_layout()
-    now = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-    plt.savefig('3d-iops-jobs' +
-                str(settings['rw']) + "-" + str(now) + '.png')
+    plt.savefig(settings['title'] + '-3d-' + metric + '-' + str(rw) + '.png')
     plt.close('all')
