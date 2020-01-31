@@ -22,8 +22,9 @@ plot() {
 
 for metric in randread randwrite read write; do
   # 3d plots looks a bit off
-	#plot $metric -L -t iops
-	#plot $metric -L -t lat
+	plot $metric -L -t iops
+	plot $metric -L -t lat
+	plot $metric -L -t bw
 	for numjobs in 1 2 4 8 16; do
 		plot $metric -l -t bw -d 1 2 4 8 16 32 -n $numjobs
 		plot $metric -g -t bw -d 1 2 4 8 16 32 -n $numjobs
