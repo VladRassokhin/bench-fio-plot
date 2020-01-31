@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import fiolib.supporting as supporting
-import pprint
 
 
 def get_dataset_types(dataset):
@@ -14,11 +13,7 @@ def get_dataset_types(dataset):
     return dataset_types
 
 
-def get_record_set_histogram(settings, dataset):
-    rw = settings['rw']
-    iodepth = int(settings['iodepth'][0])
-    numjobs = int(settings['numjobs'][0])
-
+def get_record_set_histogram(dataset, rw: str, iodepth: int, numjobs: int):
     record_set = {'iodepth': iodepth, 'numjobs': numjobs, 'data': None}
 
     for record in dataset:
@@ -42,7 +37,8 @@ def get_record_set_3d(settings, dataset, dataset_types, rw, metric):
         row = []
         for jobs in dataset_types['numjobs']:
             for record in dataset:
-                if (int(record['iodepth']) == int(depth)) and int(record['numjobs']) == jobs and record['rw'] == rw and record['type'] in filter:
+                if (int(record['iodepth']) == int(depth)) and int(record['numjobs']) == jobs and record['rw'] == rw and \
+                        record['type'] in filter:
                     row.append(record[metric])
         record_set['values'].append(supporting.round_metric_series(row))
     return record_set
@@ -68,7 +64,8 @@ def get_record_set(settings, dataset, dataset_types, rw, numjobs):
 
     for depth in dataset_types['iodepth']:
         for record in dataset:
-            if (int(record['iodepth']) == int(depth)) and int(record['numjobs']) == int(numjobs[0]) and record['rw'] == rw and record['type'] in settings['filter']:
+            if (int(record['iodepth']) == int(depth)) and int(record['numjobs']) == int(numjobs[0]) and record[
+                'rw'] == rw and record['type'] in settings['filter']:
                 iops_series_raw.append(record['iops'])
                 lat_series_raw.append(record['lat'])
                 iops_stddev_series_raw.append(record['iops_stddev'])
@@ -144,14 +141,14 @@ def autolabel(rects, axis):
 
 def create_stddev_table(data, ax2):
     table_vals = [data['x_axis'], data['y1_axis']
-                  ['stddev'], data['y2_axis']['stddev']]
+    ['stddev'], data['y2_axis']['stddev']]
 
     cols = len(data['x_axis'])
-    table = ax2.table(cellText=table_vals,  loc='center right', rowLabels=[
+    table = ax2.table(cellText=table_vals, loc='center right', rowLabels=[
         'IO queue depth', f'IOP/s \u03C3 %', f'Latency \u03C3 %'],
-        colLoc='center right',
-        cellLoc='center right', colWidths=[0.05] * cols,
-        rasterized=False)
+                      colLoc='center right',
+                      cellLoc='center right', colWidths=[0.05] * cols,
+                      rasterized=False)
     table.scale(1, 1.2)
 
     for key, cell in table.get_celld().items():

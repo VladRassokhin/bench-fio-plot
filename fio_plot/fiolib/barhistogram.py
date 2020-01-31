@@ -10,8 +10,8 @@ import fiolib.supporting as supporting
 
 def sort_latency_keys(latency):
     """The FIO latency data has latency buckets and those are sorted ascending.
-    The milisecond data has a >=2000 bucket which cannot be sorted in a 'normal'
-    way, so it is just stuck on top. This function resturns a list of sorted keys.
+    The millisecond data has a >=2000 bucket which cannot be sorted in a 'normal'
+    way, so it is just stuck on top. This function returns a list of sorted keys.
     """
     placeholder = ""
     tmp = []
@@ -22,7 +22,7 @@ def sort_latency_keys(latency):
             tmp.append(item)
 
     tmp.sort(key=int)
-    if(placeholder):
+    if placeholder:
         tmp.append(placeholder)
     return tmp
 
@@ -48,7 +48,7 @@ def autolabel(rects, axis):
         if height >= 1:
             axis.text(rect.get_x() + rect.get_width() / 2., 1 +
                       height, '{}%'.format(int(height)),
-                              ha='center', fontsize=fontsize)
+                      ha='center', fontsize=fontsize)
         elif height > 0.4:
             axis.text(rect.get_x() + rect.get_width() /
                       2., 1 + height, "{:3.2f}%".format(height), ha='center', fontsize=fontsize)
@@ -57,7 +57,18 @@ def autolabel(rects, axis):
 def chart_latency_histogram(settings, dataset):
     """This function is responsible to draw the 2D latency histogram,
     (a bar chart)."""
-    record_set = shared.get_record_set_histogram(settings, dataset)
+    numjobs = settings['numjobs']
+    if not numjobs or len(numjobs) != 1:
+        print("Expected only single numjob, got: " + str(numjobs))
+        exit(1)
+    iodepth = settings['iodepth']
+    if not iodepth or len(iodepth) != 1:
+        print("Expected only single iodepth, got: " + str(iodepth))
+        exit(1)
+    rw = settings['rw']
+    numjobs = int(numjobs[0])
+    iodepth = int(iodepth[0])
+    record_set = shared.get_record_set_histogram(dataset, rw, iodepth, numjobs)
 
     # We have to sort the data / axis from low to high
     sorted_result_ms = sort_latency_data(record_set['data']['latency_ms'])
@@ -122,10 +133,8 @@ def chart_latency_histogram(settings, dataset):
 
     plt.tight_layout(rect=[0, 0.00, 0.95, 0.95])
     title = settings['title'].replace(" ", '-').replace("/", '-')
-    name = title + '-hist-lat-' + str(settings['rw']) + '-' + '-'.join(
-        map(str, settings['numjobs'])) + '.png'
+    name = f"{title}-hist-lat-{rw}-j{numjobs}-qd{iodepth}.png"
     if os.path.isfile(name):
         print(f"File '{name}' already exists")
         exit(1)
     fig.savefig(name, dpi=settings['dpi'])
-
