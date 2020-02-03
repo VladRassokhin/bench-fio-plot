@@ -41,14 +41,14 @@ then
 	mkdir -p "$OUTPUT"
 fi
 
-for RW in randread randwrite randrw read write readwrite
+for RW in randread randwrite read write
 do
-	for IODEPTH in 1 2 4 8 16 32
+	for IODEPTH in 1 2 4 8 16 32 64
 	do
-		for NUMJOBS in 1 2 4 8 16
+		for NUMJOBS in 1 2 4 8 16 32
 		do
 			sync
-			[[ -f /proc/sys/vm/drop_caches ]] && (echo 3 > /proc/sys/vm/drop_caches || true)
+			[[ -w /proc/sys/vm/drop_caches ]] && (echo 3 > /proc/sys/vm/drop_caches || true)
 			echo "=== $FILE ============================================"
 			echo "Running benchmark $RW with I/O depth of $IODEPTH and numjobs $NUMJOBS"
 			export RW

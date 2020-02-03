@@ -10,7 +10,7 @@ mkdir -p results
 echo "OK"
 
 echo "Running benchmark..."
-./benchmark_script/bench-fio.sh benchmark_script/fio-job-template-file.fio results . testfile 4G
+./benchmark_script/bench-fio.sh benchmark_script/fio-job-template-file.fio results . testfile 20G
 echo "DONE"
 
 
