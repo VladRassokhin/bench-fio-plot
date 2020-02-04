@@ -216,7 +216,13 @@ def raw_stddev_to_percent(values, stddev_series):
     result = []
     for x, y in zip(values, stddev_series):
         # pprint.pprint(f"{x} - {y}")
-        percent = round((int(y) / int(x)) * 100, 0)
+        if int(x) == 0:
+            if int(y) == 0:
+                percent = 0
+            else:
+                percent = 100
+        else:
+            percent = round((int(y) / int(x)) * 100, 0)
         result.append(percent)
     # pprint.pprint(result)
     return result
